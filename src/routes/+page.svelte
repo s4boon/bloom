@@ -7,6 +7,7 @@
     resizeCanvasToDisplaySize,
   } from "$lib/webglutils";
 
+  let fps = $state(0);
   onMount(() => {
     const start_time = performance.now();
     const canvas = document.querySelector<HTMLCanvasElement>("#c")!;
@@ -158,7 +159,7 @@
       const now = performance.now();
       const dt = now - lastFrame;
       lastFrame = now;
-      const fps = 1000 / dt;
+      fps = Math.round(1000 / dt);
 
       console.log(fps);
       const time = (now - start_time) * 0.001;
@@ -226,9 +227,34 @@
   }
 </script>
 
+<div class="fps-counter">
+  {fps} FPS
+</div>
+
 <canvas id="c" class="bg-black"></canvas>
 
 <style>
+  .fps-counter {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+
+    padding: 8px 12px;
+
+    color: white;
+    font-family: monospace;
+    font-size: 14px;
+
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+
+    user-select: none;
+    pointer-events: none;
+  }
+
   canvas {
     width: 100vw;
     height: 100vh;
