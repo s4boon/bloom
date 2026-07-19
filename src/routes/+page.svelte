@@ -33,6 +33,10 @@
 
     const colorLocation = gl.getUniformLocation(program, "u_color");
     const radiusUniformLocation = gl.getUniformLocation(program, "u_radius");
+    const finalRadiusUniformLocation = gl.getUniformLocation(
+      program,
+      "u_final_radius",
+    );
     const originUniformLocation = gl.getUniformLocation(program, "u_origin");
     const lifetimeUniformLocation = gl.getUniformLocation(
       program,
@@ -65,7 +69,8 @@
 
     type Disc = {
       origin: { x: number; y: number };
-      halfR: number;
+      radius: number;
+      max_radius: number;
       color: {
         x: number;
         y: number;
@@ -77,31 +82,11 @@
     };
 
     let discs: Array<Disc> = [];
-    // canvas.onmousemove = (e) => {
-    //   // console.log("shite", e.clientX, e.clientY);
-    //   for (let index = 0; index < 10; index++) {
-    //     const d: Disc = {
-    //       origin: {
-    //         x: randomInt(e.clientX + 100, Math.max(0, e.clientX - 100)),
-    //         y: randomInt(e.clientY + 100, Math.max(0, e.clientY - 100)),
-    //       },
-
-    //       radius: randomInt(40, 20),
-    //       color: { x: Math.random(), y: Math.random(), z: Math.random() },
-    //     };
-    //     if (isValid(d)) {
-    //       discs.push(d);
-    //     }
-    //   }
-    //   discs = discs.filter((disc) => {
-    //     return (
-    //       Math.abs(disc.origin.x - e.clientX) < 400 &&
-    //       Math.abs(disc.origin.y - e.clientY) < 400
-    //     );
-    //   });
-    // };
 
     window.onpointermove = (e) => {
+      discs = discs.filter((disc) => {
+        return disc.radius > 0.0;
+      });
       const rect = canvas.getBoundingClientRect();
 
       // Convert browser mouse coordinates -> WebGL canvas coordinates
@@ -110,22 +95,24 @@
       const mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
 
       for (let index = 0; index < 10; index++) {
-        const spread = 80;
+        const spread = 40;
+        const r = randomInt(30, 10);
 
         const d: Disc = {
           origin: {
             x: mouseX + randomInt(spread, -spread),
             y: mouseY + randomInt(spread, -spread),
           },
-          halfR: randomInt(50, 10),
+          max_radius: r,
+          radius: r,
           color: {
             x: Math.random(),
             y: Math.random(),
             z: Math.random(),
           },
           spawn_time: (performance.now() - start_time) * 0.001,
-          despawn_time: 0,
-          animation_time: 0.1,
+          despawn_time: 0.0,
+          animation_time: randomInt(50, 300) * 0.001,
         };
 
         if (isValid(d)) {
@@ -133,20 +120,30 @@
         }
       }
 
-      discs = discs.filter((disc) => {
-        return (
-          Math.abs(disc.origin.x - mouseX) < 400 &&
-          Math.abs(disc.origin.y - mouseY) < 400
-        );
+      discs = discs.map((disc) => {
+        if (
+          (Math.abs(disc.origin.x - mouseX) > 400 ||
+            Math.abs(disc.origin.y - mouseY) > 400) &&
+          disc.despawn_time == 0
+        ) {
+          return {
+            ...disc,
+            despawn_time: (performance.now() - start_time) * 0.001,
+          };
+        }
+        return disc;
       });
     };
 
     function isValid(disc: Disc) {
       const idx = discs.findIndex((d) => {
+        if (d.despawn_time > 0) {
+          return false;
+        }
         const d_sq =
           Math.pow(disc.origin.x - d.origin.x, 2) +
           Math.pow(disc.origin.y - d.origin.y, 2);
-        const rs_sq = Math.pow(disc.halfR + d.halfR, 2);
+        const rs_sq = Math.pow(disc.max_radius + d.max_radius, 2);
         return d_sq <= rs_sq;
       });
       if (idx == -1) {
@@ -179,20 +176,24 @@
       gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
 
       discs.forEach((disc) => {
+        if (disc.despawn_time > 0) {
+          const delta = disc.despawn_time - time;
+          const rate = 1.0 + Math.max(delta / disc.animation_time, -1.0);
+          disc.radius = disc.max_radius * rate;
+        } else {
+          const delta = time - disc.spawn_time;
+          const rate = Math.min(delta / disc.animation_time, 1.0);
+          disc.radius = disc.max_radius * rate;
+        }
         // Put a rectangle in the position buffer
-        const x1 = disc.origin.x - disc.halfR;
-        const x2 = disc.origin.x + disc.halfR;
-        const y1 = disc.origin.y - disc.halfR;
-        const y2 = disc.origin.y + disc.halfR;
+        const x1 = disc.origin.x - disc.max_radius;
+        const x2 = disc.origin.x + disc.max_radius;
+        const y1 = disc.origin.y - disc.max_radius;
+        const y2 = disc.origin.y + disc.max_radius;
 
-        gl.uniform1f(radiusUniformLocation, disc.halfR);
+        gl.uniform1f(radiusUniformLocation, disc.radius);
+        gl.uniform1f(finalRadiusUniformLocation, disc.max_radius);
         gl.uniform2f(originUniformLocation, disc.origin.x, disc.origin.y);
-        gl.uniform3f(
-          lifetimeUniformLocation,
-          disc.spawn_time,
-          disc.despawn_time,
-          disc.animation_time,
-        );
         gl.uniform4f(
           colorLocation,
           disc.color.x,
