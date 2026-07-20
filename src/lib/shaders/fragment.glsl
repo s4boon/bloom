@@ -1,42 +1,22 @@
 #version 300 es
-
 precision highp float;
+
+in vec2 v_local;
+in float v_radius;
+in float v_max_radius;
+in vec4 v_color;
+
+uniform float u_time;
 
 out vec4 outColor;
 
-uniform vec4 u_color;
-uniform vec2 u_resolution;
-uniform vec2 u_origin;
-uniform float u_radius;
-uniform float u_final_radius;
-uniform float u_time;
+void main() {
+  float dist = length(v_local) * v_max_radius;
 
-void main() { 
-//   float delta = u_time - u_lifetime.x;
-//   float rate = clamp(delta / u_lifetime.z,0.0, 1.0);
+  float edge = 1.5;
+  float alpha = 1.0 - smoothstep(v_radius - edge, v_radius + edge, dist);
 
-//   float r = u_radius * rate;
+  if (alpha <= 0.0) discard;
 
-    vec2 center = vec2(
-        u_origin.x,
-        u_resolution.y - u_origin.y
-    );
-
-    float d = distance(center, gl_FragCoord.xy);
-
-    float edge = 1.5;
-
-    // Throw away fragments well outside the circle.
-    if (d > u_final_radius + edge) {
-        discard;
-    }
-
-    // Fade only across the edge.
-    float alpha = 1.0 - smoothstep(
-        u_radius - edge,
-        u_radius + edge,
-        d
-    );
-
-    outColor = vec4(u_color.rgb * alpha, alpha);
+  outColor = vec4(v_color.rgb, v_color.a * alpha);
 }
