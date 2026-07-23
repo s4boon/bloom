@@ -1,24 +1,26 @@
 #version 300 es
+precision highp float;
 
-// Per-vertex: unit quad corner, -1..1
 in vec2 a_position;
+in vec2 a_texCoord;
 
-// Per-instance
 in vec2 a_origin;
 in float a_max_radius;
 in vec4 a_color;
 in float a_spawn_time;
 in float a_animation_time;
-in float a_despawn_time; // -1.0 means "not despawning"
+in float a_despawn_time;
+in vec2 a_flower;
+in float a_rotation;
 
 uniform vec2 u_resolution;
 uniform float u_time;
-uniform float u_despawn_duration;
 
-out vec2 v_local;
-out float v_radius;
-out float v_max_radius;
+out vec2 v_texCoord;
 out vec4 v_color;
+out vec2 v_local;
+
+out float v_max_radius;
 
 void main() {
   float growDelta = u_time - a_spawn_time;
@@ -27,11 +29,15 @@ void main() {
 
   if (a_despawn_time >= 0.0) {
     float shrinkDelta = u_time - a_despawn_time;
-    float shrinkRate = clamp(shrinkDelta / u_despawn_duration, 0.0, 1.0);
+    float shrinkRate = clamp(shrinkDelta / a_animation_time, 0.0, 1.0);
     radius *= (1.0 - shrinkRate);
   }
 
-  vec2 worldPos = a_origin + a_position * a_max_radius;
+  float theta = u_time*a_rotation;
+  float xr = a_position.x * cos(theta) - a_position.y * sin(theta);
+  float yr = a_position.x * sin(theta) + a_position.y * cos(theta);
+
+  vec2 worldPos = a_origin + vec2(xr, yr) * radius; 
 
   vec2 zeroToOne = worldPos / u_resolution;
   vec2 zeroToTwo = zeroToOne * 2.0;
@@ -39,8 +45,9 @@ void main() {
 
   gl_Position = vec4(clipSpace.x, -clipSpace.y, 0, 1);
 
-  v_local = a_position;
-  v_radius = radius;
-  v_max_radius = a_max_radius;
+  v_texCoord = a_texCoord / 5.0; //5x5 grid
+  v_texCoord = vec2(v_texCoord.x + a_flower.x/5.0, v_texCoord.y + a_flower.y/5.0);
+
   v_color = a_color;
+  v_local = a_position;
 }
