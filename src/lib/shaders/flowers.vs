@@ -6,7 +6,6 @@ in vec2 a_texCoord;
 
 in vec2 a_origin;
 in float a_max_radius;
-in vec4 a_color;
 in float a_spawn_time;
 in float a_animation_time;
 in float a_despawn_time;
@@ -48,6 +47,5 @@ void main() {
   v_texCoord = a_texCoord / 5.0; //5x5 grid
   v_texCoord = vec2(v_texCoord.x + a_flower.x/5.0, v_texCoord.y + a_flower.y/5.0);
 
-  v_color = a_color;
   v_local = a_position;
 }
