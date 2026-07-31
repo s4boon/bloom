@@ -16,10 +16,10 @@ uniform vec2 u_resolution;
 uniform float u_time;
 
 out vec2 v_texCoord;
-out vec4 v_color;
 out vec2 v_local;
 
-out float v_max_radius;
+
+const float TAU = 6.28318530718;
 
 void main() {
   float growDelta = u_time - a_spawn_time;
@@ -32,7 +32,7 @@ void main() {
     radius *= (1.0 - shrinkRate);
   }
 
-  float theta = u_time*a_rotation;
+  float theta = mod(u_time * a_rotation, TAU); // flowers start blinking after large values of u_time, this might be the cluprit
   float xr = a_position.x * cos(theta) - a_position.y * sin(theta);
   float yr = a_position.x * sin(theta) + a_position.y * cos(theta);
 

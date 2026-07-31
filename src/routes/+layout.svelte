@@ -19,6 +19,7 @@
   let fps = $state(0);
   let mouse = { x: 0, y: 0 };
   let flowers: Flower[] = [];
+  let textures_loaded = $derived(textureLoader.allLoaded);
   const texture_urls = ["/textures/5X5.png"];
   textureLoader.loadAll(texture_urls);
 
