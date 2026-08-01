@@ -42,9 +42,6 @@
       canvasSpace.rectToCanvas(el.getBoundingClientRect()),
     );
   }
-  function updateClearings() {
-    flowerManager.clearing = getClearings();
-  }
 
   onMount(() => {
     const canvas = document.querySelector<HTMLCanvasElement>("#c")!;
@@ -55,6 +52,12 @@
     canvasSpace.set(canvas);
 
     if (!gl) return;
+
+    function updateClearings() {
+      resizeCanvasToDisplaySize(canvas);
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      flowerManager.clearing = getClearings();
+    }
 
     window.addEventListener("pointermove", mouse_listener);
     window.addEventListener("resize", updateClearings);
