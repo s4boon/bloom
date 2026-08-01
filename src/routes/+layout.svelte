@@ -10,56 +10,91 @@
     resizeCanvasToDisplaySize,
   } from "$lib/webgl-utils";
   import { loadTexture } from "$lib";
-  import { addFlower, RENDER_CONFIG, type Flower } from "$lib/flowers.svelte";
   import { canvasSpace } from "$lib/canvas-space.svelte";
   import { textureLoader } from "$lib/texture-loader.svelte";
+  import { flowerManager, RENDER_CONFIG } from "$lib/flowers.svelte";
+  import { observeClassChanges } from "$lib/observer";
 
   let { children } = $props();
 
   let fps = $state(0);
   let mouse = { x: 0, y: 0 };
-  let flowers: Flower[] = [];
+  // let flowers: Flower[] = [];
   let textures_loaded = $derived(textureLoader.allLoaded);
   const texture_urls = ["/textures/5X5.png"];
   textureLoader.loadAll(texture_urls);
 
-  const MAX_DISCS = 4096;
   // origin(2) + max_radius(1) + spawn_time(1) + animation_time(1) + despawn_time(1) + flower(2) + rotation(1)
   const FLOATS_PER_INSTANCE = 2 + 1 + 1 + 1 + 1 + 2 + 1;
   const STRIDE = FLOATS_PER_INSTANCE * 4; // bytes
 
   function mouse_listener(e: MouseEvent) {
-    const now = performance.now() * 0.001;
     mouse = canvasSpace.clientToCanvas(e.clientX, e.clientY);
     for (let index = 0; index < 10; index++) {
-      addFlower(flowers, { x: mouse.x, y: mouse.y });
+      flowerManager.addFlower({ x: mouse.x, y: mouse.y }, true);
     }
-
     // mark flowers that just left the AOE as despawning
-    flowers.forEach((flower) => {
-      if (flower.despawn_time !== -1) return;
+    flowerManager.despawnAOE({ x: e.clientX, y: e.clientY });
+  }
 
-      const d_sq =
-        Math.pow(flower.origin.x - mouse.x, 2) +
-        Math.pow(flower.origin.y - mouse.y, 2);
-      const rs_sq = Math.pow(RENDER_CONFIG.AOE + 100, 2);
-      const inside = d_sq <= rs_sq;
-
-      if (!inside) {
-        flower.despawn_time = now;
-      }
-    });
+  function getClearings() {
+    return Array.from(document.getElementsByClassName("clearing")).map((el) =>
+      canvasSpace.rectToCanvas(el.getBoundingClientRect()),
+    );
+  }
+  function updateClearings() {
+    flowerManager.clearing = getClearings();
   }
 
   onMount(() => {
-    window.addEventListener("pointermove", mouse_listener);
     const canvas = document.querySelector<HTMLCanvasElement>("#c")!;
+    resizeCanvasToDisplaySize(canvas);
     const gl = canvas.getContext("webgl2", {
       antialias: true,
     })!;
     canvasSpace.set(canvas);
 
     if (!gl) return;
+
+    window.addEventListener("pointermove", mouse_listener);
+    window.addEventListener("resize", updateClearings);
+
+    const stopObserver = observeClassChanges(() => {
+      flowerManager.clearing = getClearings();
+    });
+
+    // run once immediately, since the observer only fires on future changes
+    flowerManager.clearing = getClearings();
+
+    flowerManager.registerSpawner("ambient1", {
+      minDelay: 3000,
+      maxDelay: 5000,
+      spawn: () => {
+        flowerManager.addFlower(canvasSpace.randomPoint(), true, 5);
+      },
+    });
+    flowerManager.registerSpawner("ambient2", {
+      minDelay: 2000,
+      maxDelay: 3000,
+      spawn: () => {
+        flowerManager.addFlower(canvasSpace.randomPoint(), true, 3);
+      },
+    });
+
+    flowerManager.registerSpawner("cluster1", {
+      minDelay: 5000,
+      maxDelay: 7000,
+      spawn: () => {
+        const clusterSize = 10;
+        const point = canvasSpace.randomPoint();
+        for (let i = 0; i < clusterSize; i++) {
+          const staggerDelay = i * (50 + Math.random() * 100);
+          window.setTimeout(() => {
+            flowerManager.addFlower(point, true, 4);
+          }, staggerDelay);
+        }
+      },
+    });
 
     const flower_program = createProgramFromSources(gl, [
       vertexShaderSource,
@@ -112,7 +147,7 @@
     gl.bindBuffer(gl.ARRAY_BUFFER, instanceBuffer);
     gl.bufferData(
       gl.ARRAY_BUFFER,
-      MAX_DISCS * FLOATS_PER_INSTANCE * 4,
+      RENDER_CONFIG.MAX_FLOWERS * FLOATS_PER_INSTANCE * 4,
       gl.DYNAMIC_DRAW,
     );
 
@@ -169,7 +204,9 @@
     const texture = loadTexture(gl, "/textures/5X5.png");
 
     // Reused scratch buffer to avoid per-frame allocation
-    const instanceData = new Float32Array(MAX_DISCS * FLOATS_PER_INSTANCE);
+    const instanceData = new Float32Array(
+      RENDER_CONFIG.MAX_FLOWERS * FLOATS_PER_INSTANCE,
+    );
 
     let lastFrame = performance.now();
 
@@ -177,9 +214,8 @@
 
     gl.bindVertexArray(vao);
 
-    console.log(canvas.width, canvas.height, window.devicePixelRatio);
-
     function render() {
+      const flowers = flowerManager.flowers;
       if (resizeCanvasToDisplaySize(canvas)) {
         gl.viewport(0, 0, canvas.width, canvas.height);
       }
@@ -196,13 +232,9 @@
 
       const time = now * 0.001;
 
-      //prune flowers
-      flowers = flowers.filter((flower) => {
-        if (flower.despawn_time === -1) return true;
-        return time - flower.despawn_time < flower.animation_time;
-      });
+      flowerManager.prune();
 
-      const count = Math.min(flowers.length, MAX_DISCS);
+      const count = Math.min(flowers.length, RENDER_CONFIG.MAX_FLOWERS);
 
       for (let i = 0; i < count; i++) {
         const flower = flowers[i];
@@ -239,7 +271,12 @@
 
     requestAnimationFrame(render);
 
-    return () => window.removeEventListener("pointermove", mouse_listener);
+    return () => {
+      window.removeEventListener("pointermove", mouse_listener);
+      window.removeEventListener("resize", updateClearings);
+      flowerManager.stopAllSpawners();
+      stopObserver();
+    };
   });
 </script>
 

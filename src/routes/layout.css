@@ -1,5 +1,36 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Nostalgia";
+  src: url("$lib/fonts/NouveauNostalgia.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Qinferly";
+  src: url("$lib/fonts/Qinferly.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-fleur: "Fleur", sans-serif;
+  --font-qinferly: "Qinferly", sans-serif;
+  --font-nostalgia: "Nostalgia", sans-serif;
+}
+
+.route-main {
+  display: grid;
+  grid-template-areas:
+    "n l"
+    "c b";
+  grid-template-columns: 3fr 1fr;
+  grid-template-rows: 1fr 2fr;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -117,26 +148,4 @@
   body {
     @apply bg-background text-foreground;
   }
-}
-
-@font-face {
-  font-family: "Nostalgia";
-  src: url("$lib/fonts/NouveauNostalgia.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Qinferly";
-  src: url("$lib/fonts/Qinferly.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@theme {
-  --font-fleur: "Fleur", sans-serif;
-  --font-qinferly: "Qinferly", sans-serif;
-  --font-nostalgia: "Nostalgia", sans-serif;
 }

@@ -27,18 +27,34 @@ class CanvasSpace {
   }
 
   // DOMRect (viewport space) -> canvas-pixel space, same conversion as inRect used
-  rectToCanvas(domRect: DOMRect) {
+  rectToCanvas(domRect: DOMRect): DOMRect {
     const { rect, scaleX, scaleY } = this.metrics;
-    return {
-      left: (domRect.left - rect.left) * scaleX,
-      right: (domRect.right - rect.left) * scaleX,
-      top: (domRect.top - rect.top) * scaleY,
-      bottom: (domRect.bottom - rect.top) * scaleY,
-    };
+
+    const left = (domRect.left - rect.left) * scaleX;
+    const top = (domRect.top - rect.top) * scaleY;
+    const width = domRect.width * scaleX;
+    const height = domRect.height * scaleY;
+
+    return new DOMRect(left, top, width, height);
   }
 
   get dpr() {
     return window.devicePixelRatio || 1;
+  }
+
+  get width() {
+    return this.element.width;
+  }
+
+  get height() {
+    return this.element.height;
+  }
+
+  randomPoint() {
+    return {
+      x: Math.random() * this.width,
+      y: Math.random() * this.height,
+    };
   }
 
   get element() {
