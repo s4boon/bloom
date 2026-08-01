@@ -23,8 +23,5 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
-	"type": "module",
-	"dependencies": {
-		"gsap": "^3.15.0"
-	}
+	"type": "module"
 }

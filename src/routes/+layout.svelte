@@ -243,42 +243,74 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
-<main class="relative w-full h-full p-px">
-  <div class="fps-counter">
-    {fps} FPS
+<div id="page">
+  <div id="top">
+    <span class="font-mono text-xs text-accent-foreground/60"
+      >Frames: {fps}</span
+    >
   </div>
-  <div class="absolute top-0 left-0 -z-20">
-    <canvas id="c" class="bg-black"></canvas>
-  </div>
-  {@render children()}
-</main>
+  <div id="left"></div>
+  <main class="border-accent-foreground/60 border bg-transparent">
+    {@render children()}
+  </main>
+  <div id="right"></div>
+  <canvas
+    id="c"
+    class="absolute touch-none bg-background place-content-center top-0 left-0 -z-20 w-dvw h-dvh"
+  ></canvas>
+  <footer id="bot">
+    <span class="font-mono text-xs text-accent-foreground/75">saboon</span>
+  </footer>
+</div>
 
 <style>
-  .fps-counter {
-    position: fixed;
-    top: 12px;
-    left: 12px;
-
-    padding: 8px 12px;
-
-    color: white;
-    font-family: monospace;
-    font-size: 14px;
-
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(8px);
-
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
-
+  #page {
+    width: 100dvw;
+    height: 100dvh;
+    display: grid;
+    grid-template-columns: 1.5rem 1fr 1.5rem;
+    grid-template-rows: 1.5rem 1fr 1.5rem;
+    grid-template-areas:
+      "t t t"
+      "l m r"
+      "b b b";
+    height: 100vh;
+    width: 100%;
     user-select: none;
     pointer-events: none;
-  }
-
-  canvas {
-    width: 100vw;
-    height: 100vh;
-    display: block;
     touch-action: none;
+  }
+  main {
+    grid-area: m;
+  }
+  #top {
+    grid-area: t;
+  }
+  #bot {
+    grid-area: b;
+  }
+  #left {
+    grid-area: l;
+  }
+  #right {
+    grid-area: r;
+  }
+  #top,
+  #bot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    padding-inline: 1.5rem;
+  }
+  #left,
+  #right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    padding-block: 1.5rem;
   }
 </style>
