@@ -18,7 +18,7 @@
 
 <style>
   .link {
-    position: relative;
+    z-index: inherit;
     color: white;
     mix-blend-mode: difference;
     cursor: pointer;

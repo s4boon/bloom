@@ -52,7 +52,7 @@
   }
 
   onMount(() => {
-    window.addEventListener("mousemove", mouse_listener);
+    window.addEventListener("pointermove", mouse_listener);
     const canvas = document.querySelector<HTMLCanvasElement>("#c")!;
     const gl = canvas.getContext("webgl2", {
       antialias: true,
@@ -177,6 +177,8 @@
 
     gl.bindVertexArray(vao);
 
+    console.log(canvas.width, canvas.height, window.devicePixelRatio);
+
     function render() {
       if (resizeCanvasToDisplaySize(canvas)) {
         gl.viewport(0, 0, canvas.width, canvas.height);
@@ -237,7 +239,7 @@
 
     requestAnimationFrame(render);
 
-    return () => window.removeEventListener("mousemove", mouse_listener);
+    return () => window.removeEventListener("pointermove", mouse_listener);
   });
 </script>
 
@@ -276,9 +278,6 @@
       "b b b";
     height: 100vh;
     width: 100%;
-    user-select: none;
-    pointer-events: none;
-    touch-action: none;
   }
   main {
     grid-area: m;

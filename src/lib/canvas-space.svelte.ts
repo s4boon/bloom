@@ -37,6 +37,10 @@ class CanvasSpace {
     };
   }
 
+  get dpr() {
+    return window.devicePixelRatio || 1;
+  }
+
   get element() {
     if (!this.canvas) throw new Error("Canvas not set");
     return this.canvas;

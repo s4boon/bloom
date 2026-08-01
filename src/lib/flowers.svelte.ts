@@ -32,7 +32,10 @@ export function addFlower(
   clearings?: DOMRect[],
 ): boolean {
   const now = performance.now() * 0.001;
-  const r = randomInt(RENDER_CONFIG.MAX_RADIUS, RENDER_CONFIG.MIN_RADIUS);
+  const dpr = window.devicePixelRatio || 1;
+  const r =
+    randomInt(RENDER_CONFIG.MAX_RADIUS, RENDER_CONFIG.MIN_RADIUS) *
+    canvasSpace.dpr;
 
   const new_flower: Flower = {
     origin: {
