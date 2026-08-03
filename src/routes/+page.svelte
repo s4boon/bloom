@@ -35,14 +35,22 @@
 <style>
   .b {
     grid-area: b;
+    min-height: 0;
+    overflow: auto;
   }
   .l {
     grid-area: l;
+    min-height: 0;
+    overflow: auto;
   }
   .c {
     grid-area: c;
+    min-height: 0;
+    overflow: auto;
   }
   .n {
     grid-area: n;
+    min-height: 0;
+    overflow: auto;
   }
 </style>

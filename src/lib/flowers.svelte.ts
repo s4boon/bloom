@@ -9,7 +9,7 @@ export const RENDER_CONFIG = {
   ROTATION_DIRECTION: null,
   ROTATION_SPEED: 2.0,
   ATLAS_UNIT_X: 5,
-  ATLAS_UNIT_Y: 5,
+  ATLAS_UNIT_Y: 4,
 };
 
 export type Flower = {

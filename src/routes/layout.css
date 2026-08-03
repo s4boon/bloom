@@ -29,6 +29,9 @@
     "c b";
   grid-template-columns: 3fr 1fr;
   grid-template-rows: 1fr 2fr;
+  overflow: hidden;
+  min-height: 0;
+  height: 100%; /* Take full height of main */
 }
 
 @custom-variant dark (&:is(.dark *));

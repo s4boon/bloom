@@ -14,14 +14,18 @@
   import { textureLoader } from "$lib/texture-loader.svelte";
   import { flowerManager, RENDER_CONFIG } from "$lib/flowers.svelte";
   import { observeClassChanges } from "$lib/observer";
+  import Splash from "./splash.svelte";
+  import { webglStatus } from "$lib/webgl-status.svelte";
 
   let { children } = $props();
 
   let fps = $state(0);
   let mouse = { x: 0, y: 0 };
   // let flowers: Flower[] = [];
-  let textures_loaded = $derived(textureLoader.allLoaded);
-  const texture_urls = ["/textures/5X5.png"];
+  const texture_urls = [
+    "/textures/atlas_5x4.png",
+    "/textures/glow_atlas_5x4.png",
+  ];
   textureLoader.loadAll(texture_urls);
 
   // origin(2) + max_radius(1) + spawn_time(1) + animation_time(1) + despawn_time(1) + flower(2) + rotation(1)
@@ -51,7 +55,10 @@
     })!;
     canvasSpace.set(canvas);
 
-    if (!gl) return;
+    if (!gl) {
+      webglStatus.error = "no webgl2 context";
+      return;
+    }
 
     function updateClearings() {
       resizeCanvasToDisplaySize(canvas);
@@ -104,7 +111,10 @@
       fragmentShaderSource,
     ]);
 
-    if (!flower_program) return;
+    if (!flower_program) {
+      webglStatus.error = "failed to compile shader programs";
+      return;
+    }
 
     const positionLoc = gl.getAttribLocation(flower_program, "a_position");
     const texCoordLoc = gl.getAttribLocation(flower_program, "a_texCoord");
@@ -204,7 +214,7 @@
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-    const texture = loadTexture(gl, "/textures/5X5.png");
+    const texture = loadTexture(gl, "/textures/atlas_5x4.png");
 
     // Reused scratch buffer to avoid per-frame allocation
     const instanceData = new Float32Array(
@@ -272,6 +282,8 @@
       requestAnimationFrame(render);
     }
 
+    webglStatus.ready = true;
+
     requestAnimationFrame(render);
 
     return () => {
@@ -286,9 +298,15 @@
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 <div id="page">
-  <div id="top">
+  <Splash />
+  <div id="top" class="flex gap-x-2.5">
     <span class="font-mono text-xs text-accent-foreground/60"
       >Frames: {fps}</span
+    >
+    <span class="font-mono text-xs text-accent-foreground/60"
+      >{textureLoader.allLoaded
+        ? "textures loaded"
+        : "loading textures..."}</span
     >
   </div>
   <div id="left"></div>
@@ -301,7 +319,7 @@
     class="absolute touch-none bg-background place-content-center top-0 left-0 -z-20 w-dvw h-dvh"
   ></canvas>
   <footer id="bot">
-    <span class="font-mono text-xs text-accent-foreground/75">saboon</span>
+    <!-- <span class="font-mono text-xs text-accent-foreground/75">saboon</span> -->
   </footer>
 </div>
 
@@ -321,6 +339,9 @@
   }
   main {
     grid-area: m;
+    overflow: hidden;
+    min-height: 0;
+    min-width: 0;
   }
   #top {
     grid-area: t;

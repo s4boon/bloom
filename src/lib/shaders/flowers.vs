@@ -44,8 +44,12 @@ void main() {
 
   gl_Position = vec4(clipSpace.x, -clipSpace.y, 0, 1);
 
-  v_texCoord = a_texCoord / 5.0; //5x5 grid
-  v_texCoord = vec2(v_texCoord.x + a_flower.x/5.0, v_texCoord.y + a_flower.y/5.0);
+  vec2 atlas = vec2(5.0, 4.0);
 
+v_texCoord = vec2(
+    (a_texCoord.x + a_flower.x) / atlas.x,
+    (a_texCoord.y + a_flower.y) / atlas.y
+);
+ 
   v_local = a_position;
 }
